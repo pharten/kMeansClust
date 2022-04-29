@@ -94,7 +94,7 @@ public class Cluster {
 	    int nPoints = clusterPoints.size();
 	    double prediction;
 	    double predictionSqAvg = 0;
-	    for (int k1=0; k1<nPoints-1; k1++) {
+	    for (int k1=0; k1<nPoints; k1++) {
 	    	prediction = clusterPoints.get(k1).prediction;
 	    	predictionAvg += prediction;
 	    	predictionSqAvg += prediction*prediction;

@@ -114,7 +114,8 @@ public class KMeans {
 		clusters.CalcPredictionAvgAndUncertainty();
 		for (int i=0; i<clusters.size(); i++) {
 			Cluster cluster = clusters.get(i);
-			System.out.println("cluster["+i+"] "+cluster.avgPrediction+", "+cluster.predictionAvg+" +/- "+cluster.predictionUncertainty);
+			int nPoints = cluster.clusterPoints.size();
+			System.out.println(i+") nPoints = "+nPoints+", "+cluster.avgPrediction+", "+cluster.predictionAvg+" +/- "+cluster.predictionUncertainty);
 		}
 
 	}
