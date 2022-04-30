@@ -1,13 +1,10 @@
 package kMeansClust;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Vector;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.opencsv.CSVReader;
 
 public class KMeans {
 
@@ -104,11 +101,11 @@ public class KMeans {
 			double internalDist = clusters.CalcTotalInternalDist();
 			System.out.println("distmin = "+distmin+", k1min = "+k1min+", k2min = "+k2min+", ExternalDist = "+externalDist+", InternalDist = "+internalDist);
 			if (internalDist>externalDist) break;
-			Cluster clusterJoined = new Cluster(clusters.get(k1min),clusters.get(k2min));
-			clusters.set(k1min, clusterJoined);
+			Cluster clustersJoined = new Cluster(clusters.get(k1min),clusters.get(k2min));
+			clusters.set(k1min, clustersJoined);
 			clusters.set(k2min, clusters.lastElement());
 			clusters.remove(clusters.size()-1);
-			System.out.println("Number of cluster = "+clusters.size());
+			System.out.println("Number of clusters = "+clusters.size());
 		}
 		
 		clusters.CalcPredictionAvgAndUncertainty();
