@@ -97,11 +97,10 @@ public class KMeans {
 			double varmin = clusters.findMinVar();
 			int k1min = clusters.getK1min();
 			int k2min = clusters.getK2min();
-			double extDistSq = clusters.getTotalExternalDistSq();
-			double intDistSq = clusters.CalcTotalInternalDistSq();
-			double intDistSqCent = clusters.CalcTotalInternalDistSqCentroid();
-			System.out.println("varmin = "+varmin+", "+k1min+", "+k2min+", extDistSq = "+extDistSq+", intDistSq = "+intDistSq+", intDistSqCent = "+intDistSqCent);
-			if (intDistSq>extDistSq) break;
+			double extVariance = clusters.CalcTotalExternalVariance();
+			double intVariance = clusters.CalcTotalClusterVariance();
+			System.out.println("varmin = "+varmin+", "+k1min+", "+k2min+", extVariance = "+extVariance+", intVariance = "+intVariance);
+			if (intVariance>extVariance) break;
 			Cluster clustersJoined = new Cluster(clusters.get(k1min),clusters.get(k2min));
 			clusters.set(k1min, clustersJoined);
 			clusters.set(k2min, clusters.lastElement());
@@ -109,9 +108,9 @@ public class KMeans {
 			System.out.println("Number of clusters = "+clusters.size());
 		}
 		
-		clusters.CalcPredictionAvgAndUncertainty();
 		for (int i=0; i<clusters.size(); i++) {
 			Cluster cluster = clusters.get(i);
+			cluster.CalcPredictionAvergeAndUncertainy();
 			int nPoints = cluster.clusterPoints.size();
 			System.out.println(i+") nPoints = "+nPoints+", "+cluster.avgPrediction+", "+cluster.predictionAvg+" +/- "+cluster.predictionUncertainty);
 		}
@@ -169,7 +168,10 @@ public class KMeans {
 		// normalize all descriptor values by average values
 		for (int i=0; i<nclust; i++) {
 			cluster = clusters.get(i);
-			descriptorValues = cluster.clusterPoints.firstElement().descriptorValues;
+			points = cluster.getClusterPoints();
+			if (points.size()!=1) throw new Exception("Should currently be only 1 point in cluster");
+			point = points.firstElement();
+			descriptorValues = point.descriptorValues;
 			for (int j=0; j<ndesc; j++) {
 				if (centroid[j]!=0.0) {
 					descriptorValues[j] /= centroid[j];

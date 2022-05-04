@@ -7,7 +7,7 @@ public class Cluster {
 	protected double[] centroid = null;
 	protected double avgPrediction;
 	protected Vector<Point> clusterPoints = new Vector<Point>();
-	protected double totalInternalDistSq, totalInternalDistSqCentroid;
+	protected double clusterVariance;
 	protected double predictionAvg;
 	protected double predictionUncertainty;
 	
@@ -25,8 +25,7 @@ public class Cluster {
 		
 		avgPrediction = point.prediction;
 		clusterPoints.add(point);
-		totalInternalDistSq = 0;
-		totalInternalDistSqCentroid = 0;
+		clusterVariance = 0.0;
 		
 		return;
 	}
@@ -62,48 +61,28 @@ public class Cluster {
 			centroid[i] = fract1*centroid1[i] + fract2*centroid2[i];
 		}
 		
-		totalInternalDistSq = totalInternalDistanceSq();
-		totalInternalDistSqCentroid = totalInternalDistanceSqCentroid();
+		clusterVariance = clusterVariance();
 
 		return;
 	}
 	
-	private double totalInternalDistanceSq() throws Exception {
+	private double clusterVariance() throws Exception {
 		  
 	    if (clusterPoints==null || clusterPoints.size()==0) throw new Error("There are no points in this cluster");
 	    
 	    int nPoints = clusterPoints.size();
 	    
-	    double distsq;
-	    double totalDistsq = 0;
-	    for (int k1=0; k1<nPoints-1; k1++) {
-	    	Point point1 = clusterPoints.get(k1);
-		    for (int k2=k1+1; k2<nPoints; k2++) {
-		    	Point point2 = clusterPoints.get(k2);
-		        distsq = distanceSq(point1, point2);
-		        totalDistsq += distsq;
-		    }
-		}
-	    
-	    return totalDistsq;
-    
-    }
-	
-	private double totalInternalDistanceSqCentroid() throws Exception {
-		  
-	    if (clusterPoints==null || clusterPoints.size()==0) throw new Error("There are no points in this cluster");
-	    
-	    int nPoints = clusterPoints.size();
+	    if (nPoints==1) return 0.0;
 	    
 	    double distsq;
-	    double totalDistSq = 0;
+	    double variance = 0;
 	    for (int k1=0; k1<nPoints; k1++) {
 	    	Point point = clusterPoints.get(k1);
 	    	distsq = distanceSq(point);
-	    	totalDistSq += distsq;
+	    	variance += distsq;
 		}
 	    
-	    return totalDistSq;
+	    return variance;
     
     }
 	
@@ -128,37 +107,9 @@ public class Cluster {
     
     }
 	
-	private double distanceSq(Point point1, Point point2) throws Exception {
-	    
-	    if (point1==null) throw new Error("cluster1 is null");
-	    if (point2==null) throw new Error("cluster2 is null");
-	    
-	    double[] descriptorValues1 = point1.descriptorValues;
-	    if (descriptorValues1==null) {
-	    	throw new Error("point1 descriptorValues is null");
-	    }
-	    
-	    double[] descriptorValues2 = point2.descriptorValues;
-	    if (descriptorValues2==null) {
-	    	throw new Error("point2 descriptorValues is null");
-	    }
-		
-	    int ndesc = descriptorValues1.length;
-	    
-	    double diff;
-	    double distsq = 0.0;
-	    for (int i=0; i<ndesc; i++) {
-	        diff = descriptorValues1[i]-descriptorValues2[i];
-	        distsq += diff*diff;
-	    }
-	    
-	    return distsq;
-    
-    }
-	
 	private double distanceSq(Point point) throws Exception {
 	    
-	    if (point==null) throw new Error("cluster1 is null");
+	    if (point==null) throw new Error("point is null");
 	    
 	    double[] descriptorValues = point.descriptorValues;
 	    if (descriptorValues==null) {
@@ -177,13 +128,9 @@ public class Cluster {
 	    return distsq;
     
     }
-
-	public double getTotalInternalDistSq() {
-		return totalInternalDistSq;
-	}
 	
-	public double getTotalInternalDistSqCentroid() {
-		return totalInternalDistSqCentroid;
+	public double getClusterVariance() {
+		return clusterVariance;
 	}
 
 	public Vector<Point> getClusterPoints() {
