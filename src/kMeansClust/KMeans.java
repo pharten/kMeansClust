@@ -94,13 +94,14 @@ public class KMeans {
 
 		int niter = clusters.size()-1;
 		for (int iter = 0; iter < niter; iter++) {
-			double distmin = clusters.findMinDist();
+			double varmin = clusters.findMinVar();
 			int k1min = clusters.getK1min();
 			int k2min = clusters.getK2min();
-			double externalDist = clusters.getTotalExternalDist();
-			double internalDist = clusters.CalcTotalInternalDist();
-			System.out.println("distmin = "+distmin+", k1min = "+k1min+", k2min = "+k2min+", ExternalDist = "+externalDist+", InternalDist = "+internalDist);
-			if (internalDist>externalDist) break;
+			double extDistSq = clusters.getTotalExternalDistSq();
+			double intDistSq = clusters.CalcTotalInternalDistSq();
+			double intDistSqCent = clusters.CalcTotalInternalDistSqCentroid();
+			System.out.println("varmin = "+varmin+", "+k1min+", "+k2min+", extDistSq = "+extDistSq+", intDistSq = "+intDistSq+", intDistSqCent = "+intDistSqCent);
+			if (intDistSq>extDistSq) break;
 			Cluster clustersJoined = new Cluster(clusters.get(k1min),clusters.get(k2min));
 			clusters.set(k1min, clustersJoined);
 			clusters.set(k2min, clusters.lastElement());
