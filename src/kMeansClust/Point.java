@@ -1,7 +1,6 @@
 package kMeansClust;
 
 import java.io.Serializable;
-import java.util.Vector;
 
 public class Point extends Object implements Serializable, Cloneable {
 	
@@ -17,14 +16,16 @@ public class Point extends Object implements Serializable, Cloneable {
 			if (values[i]!=null && values[i]!="") {
 				descriptorValues[i] = Double.parseDouble(values[i]);
 			} else {
-				descriptorValues[i] = 0.0;
+				throw new Exception("This descriptor value is null or blank");
+				//descriptorValues[i] = 0.0;
 			}
 		}
 		int predictionPosition = descriptorValuesLength;
 		if (values[predictionPosition]!=null && values[predictionPosition]!="") {
 			prediction = Double.parseDouble(values[predictionPosition]);
 		} else {
-			prediction = 0.0;
+			throw new Exception("This observed prediction is null or blank");
+			//prediction = 0.0;
 		}
 	}
 
