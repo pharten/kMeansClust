@@ -10,7 +10,7 @@ public class Point extends Object implements Serializable, Cloneable {
 	public Point(String[] values) throws Exception {
 		super();
 		int length = values.length;
-		int descriptorValuesLength = length-2;
+		int descriptorValuesLength = length-1;
 		descriptorValues = new double[descriptorValuesLength];
 		for (int i=0; i<descriptorValuesLength; i++) {
 			if (values[i]!=null && values[i]!="") {
