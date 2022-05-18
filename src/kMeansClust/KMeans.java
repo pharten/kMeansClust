@@ -92,6 +92,7 @@ public class KMeans {
 		
 		normalize(clusters);
 
+		double extVarianceBefore=0;
 		int niter = clusters.size()-1;
 		for (int iter = 0; iter < niter; iter++) {
 			double varmin = clusters.findMinVar();
@@ -101,11 +102,13 @@ public class KMeans {
 			double intVariance = clusters.CalcTotalClusterVariance();
 			System.out.println("varmin = "+varmin+", "+k1min+", "+k2min+", extVariance = "+extVariance+", intVariance = "+intVariance);
 			if (intVariance>extVariance) break;
+			if ((varmin>(extVarianceBefore-extVariance)) && (iter>0) ) break;
 			Cluster clustersJoined = new Cluster(clusters.get(k1min),clusters.get(k2min));
 			clusters.set(k1min, clustersJoined);
 			clusters.set(k2min, clusters.lastElement());
 			clusters.remove(clusters.size()-1);
 			System.out.println("Number of clusters = "+clusters.size());
+			extVarianceBefore = extVariance;
 		}
 		
 		for (int i=0; i<clusters.size(); i++) {

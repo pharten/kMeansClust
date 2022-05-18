@@ -104,6 +104,7 @@ public class Cluster {
 	    double stdsq = predictionSqAvg - predictionAvg*predictionAvg;
 	    
 	    predictionUncertainty = Math.sqrt(stdsq/nPoints);
+	    //predictionUncertainty = Math.sqrt(stdsq);
     
     }
 	
