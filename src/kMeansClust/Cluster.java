@@ -91,10 +91,18 @@ public class Cluster {
 	    if (clusterPoints==null || clusterPoints.size()==0) throw new Error("There are no points in this cluster");
 	    
 	    int nPoints = clusterPoints.size();
+	    int nSamp = 16;
+	    double sampPred;
 	    double prediction;
+	    predictionAvg = 0.0;
 	    double predictionSqAvg = 0;
 	    for (int k1=0; k1<nPoints; k1++) {
-	    	prediction = clusterPoints.get(k1).prediction;
+	    	sampPred=0.0;
+	    	for (int i=0; i<nSamp; i++) {
+	    		sampPred += clusterPoints.get((int)(Math.random()*nPoints)).prediction;
+	    	}
+	    	prediction = sampPred / nSamp;
+	    	//prediction = clusterPoints.get(k1).prediction;
 	    	predictionAvg += prediction;
 	    	predictionSqAvg += prediction*prediction;
 	    }
