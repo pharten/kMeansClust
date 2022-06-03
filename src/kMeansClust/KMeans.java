@@ -102,10 +102,10 @@ public class KMeans {
 			double extVariance = clusters.CalcTotalExternalVariance();
 			double intVariance = clusters.CalcTotalClusterVariance();
 			System.out.println("varmin = "+varmin+", "+k1min+", "+k2min+", extVariance = "+extVariance+", intVariance = "+intVariance);
-			//if (intVariance>extVariance) break;
+			if (intVariance>extVariance) break;
 			//if ((varmin>(extVarianceBefore-extVariance)) && (iter>0) ) break;
 			//if the increase in internal variance becomes > the decrease in external variance then break.
-			if (((intVariance-intVarianceBefore)>(extVarianceBefore-extVariance)) && (iter>0) ) break;
+			//if (((intVariance-intVarianceBefore)>(extVarianceBefore-extVariance)) && (iter>0) ) break;
 			Cluster clustersJoined = new Cluster(clusters.get(k1min),clusters.get(k2min));
 			clusters.set(k1min, clustersJoined);
 			clusters.set(k2min, clusters.lastElement());
