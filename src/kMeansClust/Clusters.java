@@ -7,8 +7,13 @@ import com.opencsv.CSVReader;
 
 public class Clusters extends Vector<Cluster> {
 	
+	/**
+	 * 
+	 */
+	//private static final long serialVersionUID = 1L;
 	int k1min, k2min;
-	double varmin, totalExternalVariance, totalClusterVariance;
+	double varmin, totalExternalVariance, totalInternalVariance;
+	double[] externalCentroid = null;
 
 	public Clusters() throws Exception {
 		super();
@@ -118,37 +123,66 @@ public class Clusters extends Vector<Cluster> {
     
     }
 	
-	public double CalcTotalExternalVariance() throws Exception {
+	public double CalcNewExternalVariance(Cluster cluster1, Cluster cluster2, Cluster clusterJ) throws Exception {
 		
-		double[] clusterCentroid = this.firstElement().centroid;
-		int ndesc = clusterCentroid.length;
-		
-		double[] externalCentroid = new double[ndesc];
-		
-		for (int j=0; j<ndesc; j++) {
-			externalCentroid[j] = clusterCentroid[j];
+		externalCentroid = CalcExternalCentroid(cluster1, cluster2, clusterJ);
+		if (totalExternalVariance==0) {
+			for (int i=0; i<this.size(); i++) {
+				totalExternalVariance += distanceSq(externalCentroid, this.get(i).centroid);
+			}
 		}
 		
-		int nclust = this.size();
-	    for (int i=1; i<nclust; i++) {
-	    	clusterCentroid = this.get(i).centroid;
-	    	for (int j=0; j<ndesc; j++) {
-	    		externalCentroid[j] += clusterCentroid[j];
-	    	}
-	    }
-	    
-	    double invNclust = 1.0/nclust;
-		for (int j=0; j<ndesc; j++) {
-			externalCentroid[j] *= invNclust;
-		}
-	    
-		totalExternalVariance = 0;
-	    for (int i=0; i<nclust; i++) {
-	    	clusterCentroid = this.get(i).centroid;
-	        totalExternalVariance += distanceSq(externalCentroid, clusterCentroid);
-	    }
+		totalExternalVariance = totalExternalVariance - distanceSq(externalCentroid, cluster1.getCentroid());
+		totalExternalVariance = totalExternalVariance - distanceSq(externalCentroid, cluster2.getCentroid());
+		totalExternalVariance = totalExternalVariance + distanceSq(externalCentroid, clusterJ.getCentroid());
 	    
 	    return totalExternalVariance;
+    
+    }
+	
+	public double[] CalcExternalCentroid(Cluster cluster1, Cluster cluster2, Cluster clusterJ) throws Exception {
+		
+		if (externalCentroid==null) {
+			
+			double[] clusterCentroid = this.firstElement().centroid;
+			int ndesc = clusterCentroid.length;
+			
+			externalCentroid = new double[ndesc];
+			
+			for (int j=0; j<ndesc; j++) {
+				externalCentroid[j] = clusterCentroid[j];
+			}
+			
+			int nclust = this.size();
+		    for (int i=1; i<nclust; i++) {
+		    	clusterCentroid = this.get(i).centroid;
+		    	for (int j=0; j<ndesc; j++) {
+		    		externalCentroid[j] += clusterCentroid[j];
+		    	}
+		    }
+		    
+		    double invNclust = 1.0/nclust;
+			for (int j=0; j<ndesc; j++) {
+				externalCentroid[j] *= invNclust;
+			}
+			
+		}
+		
+		int ndesc = externalCentroid.length;
+		int n1 = cluster1.getClusterPoints().size();
+		int n2 = cluster2.getClusterPoints().size();
+		int nJ = clusterJ.getClusterPoints().size();
+		if(nJ!=n1+n2) throw new Error("Joined cluster is not correct size");
+		
+		double[] centroid1 = cluster1.getCentroid();
+		double[] centroid2 = cluster2.getCentroid();
+		double[] centroidJ = clusterJ.getCentroid();
+		
+    	for (int j=0; j<ndesc; j++) {
+    		externalCentroid[j] = externalCentroid[j] - n1*centroid1[j] - n2*centroid2[j] + nJ*centroidJ[j];
+    	}
+			
+	    return externalCentroid;
     
     }
 	
@@ -174,16 +208,11 @@ public class Clusters extends Vector<Cluster> {
     
     }
 	
-	public double CalcTotalClusterVariance() throws Exception {
-		  
-		int nclust = this.size();
+	public double CalcNewInternalVariance(Cluster cluster1, Cluster cluster2, Cluster clusterJ) throws Exception {
 	
-		totalClusterVariance = 0;
-	    for (int i=0; i<nclust; i++) {
-	        totalClusterVariance += this.get(i).getClusterVariance();
-	    }
+		totalInternalVariance = totalInternalVariance - cluster1.getClusterVariance() - cluster2.getClusterVariance() + clusterJ.getClusterVariance();
 	    
-	    return totalClusterVariance;
+	    return totalInternalVariance;
     
     }
 	
@@ -203,8 +232,8 @@ public class Clusters extends Vector<Cluster> {
 		return totalExternalVariance;
 	}
 
-	public double getTotalClusterVariance() {
-		return totalClusterVariance;
+	public double getTotalInternalVariance() {
+		return totalInternalVariance;
 	}
 	
 }

@@ -91,6 +91,7 @@ public class KMeans {
 		System.out.println("Number of cluster = "+clusters.size());
 		
 		normalize(clusters);
+		Cluster cluster1, cluster2, clustersJoined;
 
 		double intVarianceBefore=0.0;
 		double extVarianceBefore=0.0;
@@ -99,14 +100,18 @@ public class KMeans {
 			double varmin = clusters.findMinVar();
 			int k1min = clusters.getK1min();
 			int k2min = clusters.getK2min();
-			double extVariance = clusters.CalcTotalExternalVariance();
-			double intVariance = clusters.CalcTotalClusterVariance();
-			System.out.println("varmin = "+varmin+", "+k1min+", "+k2min+", extVariance = "+extVariance+", intVariance = "+intVariance);
+			cluster1 = clusters.get(k1min);
+			cluster2 = clusters.get(k2min);
+			clustersJoined = new Cluster(cluster1,cluster2);
+			double extVariance = clusters.CalcNewExternalVariance(cluster1, cluster2, clustersJoined);
+			double intVariance = clusters.CalcNewInternalVariance(cluster1, cluster2, clustersJoined);
+			System.out.println("varmin = "+varmin+", "+cluster1.getClusterPoints().size()+", "+cluster2.getClusterPoints().size()+
+					", extVariance = "+extVariance+", intVariance = "+intVariance);
 			if (intVariance>extVariance) break;
 			//if ((varmin>(extVarianceBefore-extVariance)) && (iter>0) ) break;
 			//if the increase in internal variance becomes > the decrease in external variance then break.
 			//if (((intVariance-intVarianceBefore)>(extVarianceBefore-extVariance)) && (iter>0) ) break;
-			Cluster clustersJoined = new Cluster(clusters.get(k1min),clusters.get(k2min));
+			
 			clusters.set(k1min, clustersJoined);
 			clusters.set(k2min, clusters.lastElement());
 			clusters.remove(clusters.size()-1);
