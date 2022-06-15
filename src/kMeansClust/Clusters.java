@@ -14,6 +14,8 @@ public class Clusters extends Vector<Cluster> {
 	int k1min, k2min;
 	double varmin, totalExternalVariance, totalInternalVariance;
 	double[] externalCentroid = null;
+    double[][] wardDist = null;
+    double[] wght = null;
 
 	public Clusters() throws Exception {
 		super();
@@ -39,6 +41,14 @@ public class Clusters extends Vector<Cluster> {
 			/* Loop over lines in the csv file */
 			while ((line = csvReader.readNext()) != null) {
 				/* Initially each cluster is a single point */
+				String sub = filename.substring(0,11);
+				if (sub.equals("./data/LD50")) {
+					int len = line.length;
+					String[] line2 = new String[len-2];
+					for (int i=0; i<len-3; i++) line2[i]=line[i+2];
+					line2[len-3]=line[1];
+					line = line2;
+				}
 				this.add(new Cluster(new Point(line)));
 			}
 
@@ -60,21 +70,21 @@ public class Clusters extends Vector<Cluster> {
 	    int ncent = this.size();
 	    
 	    varmin = Double.MAX_VALUE;
+	    double var;
 	    k1min = 0;
 	    k2min = 0;
 	    
-	    double wardDist;
 	    double[] wght = new double[ncent];
 	    
 	    for (int k1=0; k1<ncent; k1++) {
 	    	wght[k1] = this.get(k1).getClusterPoints().size();
 		}
 	    
-	    for (int k1=0; k1<ncent-1; k1++) {
-	    	for (int k2=k1+1; k2<ncent; k2++) {
-		        wardDist = (wght[k1]*wght[k2])/(wght[k1]+wght[k2])*distanceSq(k1, k2);
-		        if (wardDist < varmin) {
-			          varmin = wardDist;
+	    for (int k2=1; k2<ncent; k2++) {
+	    	for (int k1=0; k1<k2; k1++) {
+	    		var = wardDist[k2][k1];
+		        if (var < varmin) {
+			          varmin = var;
 			          k1min = k1;
 			          k2min = k2;
 			    }
@@ -82,6 +92,40 @@ public class Clusters extends Vector<Cluster> {
 		}
 	    
 	    return varmin;
+	}
+	
+	public void calcWardsDistances() throws Exception {
+		  
+	    int ncent = this.size();
+	     
+	    wardDist = new double[ncent][ncent];
+	    wght = new double[ncent];
+	    
+	    for (int k1=0; k1<ncent; k1++) {
+	    	wght[k1] = this.get(k1).getClusterPoints().size();
+		}
+	    
+	    for (int k2=1; k2<ncent; k2++) {
+	    	for (int k1=0; k1<k2; k1++) {
+		        wardDist[k2][k1] = (wght[k1]*wght[k2])/(wght[k1]+wght[k2])*distanceSq(k1, k2);
+	    	}
+		}
+	    
+	}
+	
+	public void reCalcWardsDistances(int k1new) throws Exception {
+		  
+	    int ncent = this.size();
+	    
+	    wght[k1new] = this.get(k1new).getClusterPoints().size();
+	    
+    	for (int k1=0; k1<k1new; k1++) {
+	        wardDist[k1new][k1] = (wght[k1]*wght[k1new])/(wght[k1]+wght[k1new])*distanceSq(k1, k1new);
+    	}
+    	for (int k1=k1new+1; k1<ncent; k1++) {
+	        wardDist[k1][k1new] = (wght[k1new]*wght[k1])/(wght[k1new]+wght[k1])*distanceSq(k1new, k1);
+    	}
+	    
 	}
 	
 	private double distanceSq(int k1, int k2) throws Exception {
@@ -123,9 +167,9 @@ public class Clusters extends Vector<Cluster> {
     
     }
 	
-	public double CalcNewExternalVariance(Cluster cluster1, Cluster cluster2, Cluster clusterJ) throws Exception {
+	public double calcNewExternalVariance(Cluster cluster1, Cluster cluster2, Cluster clusterJ) throws Exception {
 		
-		externalCentroid = CalcExternalCentroid(cluster1, cluster2, clusterJ);
+		externalCentroid = calcExternalCentroid(cluster1, cluster2, clusterJ);
 		if (totalExternalVariance==0) {
 			for (int i=0; i<this.size(); i++) {
 				totalExternalVariance += distanceSq(externalCentroid, this.get(i).centroid);
@@ -140,7 +184,7 @@ public class Clusters extends Vector<Cluster> {
     
     }
 	
-	public double[] CalcExternalCentroid(Cluster cluster1, Cluster cluster2, Cluster clusterJ) throws Exception {
+	public double[] calcExternalCentroid(Cluster cluster1, Cluster cluster2, Cluster clusterJ) throws Exception {
 		
 		if (externalCentroid==null) {
 			
@@ -208,7 +252,7 @@ public class Clusters extends Vector<Cluster> {
     
     }
 	
-	public double CalcNewInternalVariance(Cluster cluster1, Cluster cluster2, Cluster clusterJ) throws Exception {
+	public double calcNewInternalVariance(Cluster cluster1, Cluster cluster2, Cluster clusterJ) throws Exception {
 	
 		totalInternalVariance = totalInternalVariance - cluster1.getClusterVariance() - cluster2.getClusterVariance() + clusterJ.getClusterVariance();
 	    

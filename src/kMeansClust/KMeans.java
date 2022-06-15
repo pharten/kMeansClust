@@ -15,6 +15,7 @@ public class KMeans {
 	static String logFilename = System.getProperty("user.dir") + "\\kMeans.log";
 
 	static String csvFilename = "./data/Multivariate_Imputed_Numerical_Columns.csv";
+	//static String csvFilename = "./data/LD50_training_set-2d.csv";
 	static String helpString = "User options:\njava -jar kMeans -h\njava -jar kMeans\njava -jar kMeans propFilename\n";
 
 	protected Vector<Cluster> clusters = new Vector<Cluster>();
@@ -95,16 +96,20 @@ public class KMeans {
 
 		double intVarianceBefore=0.0;
 		double extVarianceBefore=0.0;
+		double varmin;
+		
+		clusters.calcWardsDistances();
+		
 		int niter = clusters.size()-1;
 		for (int iter = 0; iter < niter; iter++) {
-			double varmin = clusters.findMinVar();
+			varmin = clusters.findMinVar();
 			int k1min = clusters.getK1min();
 			int k2min = clusters.getK2min();
 			cluster1 = clusters.get(k1min);
 			cluster2 = clusters.get(k2min);
 			clustersJoined = new Cluster(cluster1,cluster2);
-			double extVariance = clusters.CalcNewExternalVariance(cluster1, cluster2, clustersJoined);
-			double intVariance = clusters.CalcNewInternalVariance(cluster1, cluster2, clustersJoined);
+			double extVariance = clusters.calcNewExternalVariance(cluster1, cluster2, clustersJoined);
+			double intVariance = clusters.calcNewInternalVariance(cluster1, cluster2, clustersJoined);
 			System.out.println("varmin = "+varmin+", "+cluster1.getClusterPoints().size()+", "+cluster2.getClusterPoints().size()+
 					", extVariance = "+extVariance+", intVariance = "+intVariance);
 			if (intVariance>extVariance) break;
@@ -113,8 +118,17 @@ public class KMeans {
 			//if (((intVariance-intVarianceBefore)>(extVarianceBefore-extVariance)) && (iter>0) ) break;
 			
 			clusters.set(k1min, clustersJoined);
-			clusters.set(k2min, clusters.lastElement());
-			clusters.remove(clusters.size()-1);
+			
+			if (k2min==clusters.size()-1) {
+				clusters.remove(clusters.size()-1);
+				clusters.reCalcWardsDistances(k1min);
+			} else {
+				clusters.set(k2min, clusters.lastElement());
+				clusters.remove(clusters.size()-1);
+				clusters.reCalcWardsDistances(k1min);
+				clusters.reCalcWardsDistances(k2min);
+			}
+			
 			System.out.println("Number of clusters = "+clusters.size());
 			intVarianceBefore = intVariance;
 			extVarianceBefore = extVariance;
@@ -187,8 +201,8 @@ public class KMeans {
 			for (int j=0; j<ndesc; j++) {
 				if (centroid[j]!=0.0) {
 					descriptorValues[j] /= centroid[j];
-				} else {
-					throw new Exception("centroid["+j+"] = 0.0");
+//				} else {
+//					throw new Exception("centroid["+j+"] = 0.0");
 				}
 			}
 			double[] clusterCentroid = cluster.getCentroid();
