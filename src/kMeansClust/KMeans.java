@@ -197,8 +197,8 @@ public class KMeans {
 			for (int j=0; j<ndesc; j++) {
 				if (centroid[j]!=0.0) {
 					descriptorValues[j] /= centroid[j];
-				} else {
-					throw new Exception("centroid["+j+"] = 0.0");
+//				} else {
+//					throw new Exception("centroid["+j+"] = 0.0");
 				}
 			}
 			double[] clusterCentroid = cluster.getCentroid();

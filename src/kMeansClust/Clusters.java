@@ -37,6 +37,14 @@ public class Clusters extends Vector<Cluster> {
 			/* Loop over lines in the csv file */
 			while ((line = csvReader.readNext()) != null) {
 				/* Initially each cluster is a single point */
+				String sub = filename.substring(0,11);
+				if (sub.equals("./data/LD50")) {
+					int len = line.length;
+					String[] line2 = new String[len-2];
+					for (int i=0; i<len-3; i++) line2[i]=line[i+2];
+					line2[len-3]=line[1];
+					line = line2;
+				}
 				this.add(new Cluster(new Point(line)));
 			}
 
