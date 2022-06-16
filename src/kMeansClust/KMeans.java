@@ -15,6 +15,7 @@ public class KMeans {
 	static String logFilename = System.getProperty("user.dir") + "\\kMeans.log";
 
 	static String csvFilename = "./data/Multivariate_Imputed_Numerical_Columns.csv";
+	//static String csvFilename = "./data/LD50_training_set-2d.csv";
 	static String helpString = "User options:\njava -jar kMeans -h\njava -jar kMeans\njava -jar kMeans propFilename\n";
 
 	protected Vector<Cluster> clusters = new Vector<Cluster>();
@@ -91,31 +92,45 @@ public class KMeans {
 		System.out.println("Number of cluster = "+clusters.size());
 		
 		normalize(clusters);
-
-		double intVarianceBefore=0.0;
-		double extVarianceBefore=0.0;
+		
+		// wardsDistances is an nclusters x nclusters triangle showing (wards)distancesq between clusters
+		clusters.calcWardsDistances();
+		
 		int niter = clusters.size()-1;
+		//niter = 958;
 		for (int iter = 0; iter < niter; iter++) {
+			
+			double extVariance = clusters.CalcTotalExternalVariance();
+			double intVariance = clusters.CalcTotalClusterVariance();
+			//System.out.println("extVariance = "+extVariance+", intVariance = "+intVariance);
+			if (intVariance>extVariance) break;
+			
 			double varmin = clusters.findMinVar();
 			int k1min = clusters.getK1min();
 			int k2min = clusters.getK2min();
-			double extVariance = clusters.CalcTotalExternalVariance();
-			double intVariance = clusters.CalcTotalClusterVariance();
-			System.out.println("varmin = "+varmin+", "+k1min+", "+k2min+", extVariance = "+extVariance+", intVariance = "+intVariance);
-			if (intVariance>extVariance) break;
+			int nPoints1 = clusters.get(k1min).clusterPoints.size();
+			int nPoints2 = clusters.get(k2min).clusterPoints.size();
+			System.out.println("nclusters = "+clusters.size()+", varmin = "+varmin+", nPoints for cluster("+k1min+") = "+nPoints1+", cluster("+k2min+") = "+nPoints2);
 			//if ((varmin>(extVarianceBefore-extVariance)) && (iter>0) ) break;
 			//if the increase in internal variance becomes > the decrease in external variance then break.
 			//if (((intVariance-intVarianceBefore)>(extVarianceBefore-extVariance)) && (iter>0) ) break;
 			Cluster clustersJoined = new Cluster(clusters.get(k1min),clusters.get(k2min));
 			clusters.set(k1min, clustersJoined);
-			clusters.set(k2min, clusters.lastElement());
-			clusters.remove(clusters.size()-1);
-			System.out.println("Number of clusters = "+clusters.size());
-			intVarianceBefore = intVariance;
-			extVarianceBefore = extVariance;
+
+			if (k2min==clusters.size()-1) {
+				clusters.remove(clusters.size()-1);
+			} else {
+				clusters.set(k2min, clusters.lastElement());
+				clusters.remove(clusters.size()-1);
+				clusters.reCalcWardsDistances(k2min);
+			}
+			clusters.reCalcWardsDistances(k1min);
+
+			//System.out.println("Number of clusters = "+clusters.size());
 		}
 		
-		for (int i=0; i<clusters.size(); i++) {
+		int nclusters = clusters.size();
+		for (int i=0; i<nclusters; i++) {
 			Cluster cluster = clusters.get(i);
 			cluster.CalcPredictionAvergeAndUncertainy();
 			int nPoints = cluster.clusterPoints.size();

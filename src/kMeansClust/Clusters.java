@@ -9,6 +9,9 @@ public class Clusters extends Vector<Cluster> {
 	
 	int k1min, k2min;
 	double varmin, totalExternalVariance, totalClusterVariance;
+	
+	double[] wght = null;
+	double[][] wardDist = null;
 
 	public Clusters() throws Exception {
 		super();
@@ -55,21 +58,15 @@ public class Clusters extends Vector<Cluster> {
 	    int ncent = this.size();
 	    
 	    varmin = Double.MAX_VALUE;
+	    double var;
 	    k1min = 0;
 	    k2min = 0;
 	    
-	    double wardDist;
-	    double[] wght = new double[ncent];
-	    
-	    for (int k1=0; k1<ncent; k1++) {
-	    	wght[k1] = this.get(k1).getClusterPoints().size();
-		}
-	    
-	    for (int k1=0; k1<ncent-1; k1++) {
-	    	for (int k2=k1+1; k2<ncent; k2++) {
-		        wardDist = (wght[k1]*wght[k2])/(wght[k1]+wght[k2])*distanceSq(k1, k2);
-		        if (wardDist < varmin) {
-			          varmin = wardDist;
+	    for (int k2=1; k2<ncent; k2++) {
+	    	for (int k1=0; k1<k2; k1++) {
+	    		var = wardDist[k2][k1];
+		        if (var < varmin) {
+			          varmin = var;
 			          k1min = k1;
 			          k2min = k2;
 			    }
@@ -77,6 +74,40 @@ public class Clusters extends Vector<Cluster> {
 		}
 	    
 	    return varmin;
+	}
+	
+	public void calcWardsDistances() throws Exception {
+		  
+	    int ncent = this.size();
+	     
+	    wardDist = new double[ncent][ncent];
+	    wght = new double[ncent];
+	    
+	    for (int k1=0; k1<ncent; k1++) {
+	    	wght[k1] = this.get(k1).getClusterPoints().size();
+		}
+	    
+	    for (int k2=1; k2<ncent; k2++) {
+	    	for (int k1=0; k1<k2; k1++) {
+		        wardDist[k2][k1] = (wght[k1]*wght[k2])/(wght[k1]+wght[k2])*distanceSq(k1, k2);
+	    	}
+		}
+	    
+	}
+	
+	public void reCalcWardsDistances(int k1new) throws Exception {
+		  
+	    int ncent = this.size();
+	    
+	    wght[k1new] = this.get(k1new).getClusterPoints().size();
+	    
+    	for (int k1=0; k1<k1new; k1++) {
+	        wardDist[k1new][k1] = (wght[k1]*wght[k1new])/(wght[k1]+wght[k1new])*distanceSq(k1, k1new);
+    	}
+    	for (int k1=k1new+1; k1<ncent; k1++) {
+	        wardDist[k1][k1new] = (wght[k1new]*wght[k1])/(wght[k1new]+wght[k1])*distanceSq(k1new, k1);
+    	}
+	    
 	}
 	
 	private double distanceSq(int k1, int k2) throws Exception {
