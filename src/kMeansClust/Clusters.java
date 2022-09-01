@@ -9,6 +9,7 @@ public class Clusters extends Vector<Cluster> {
 	
 	int k1min, k2min;
 	double varmin, totalExternalVariance, totalClusterVariance;
+	double[] externalCentroid = null;
 	
 	double[] wght = null;
 	double[][] wardDist = null;
@@ -159,28 +160,11 @@ public class Clusters extends Vector<Cluster> {
 	
 	public double CalcTotalExternalVariance() throws Exception {
 		
-		double[] clusterCentroid = this.firstElement().centroid;
-		int ndesc = clusterCentroid.length;
+		if (externalCentroid==null) calcExternalCentroid();
 		
-		double[] externalCentroid = new double[ndesc];
-		
-		for (int j=0; j<ndesc; j++) {
-			externalCentroid[j] = clusterCentroid[j];
-		}
+		double[] clusterCentroid;
 		
 		int nclust = this.size();
-	    for (int i=1; i<nclust; i++) {
-	    	clusterCentroid = this.get(i).centroid;
-	    	for (int j=0; j<ndesc; j++) {
-	    		externalCentroid[j] += clusterCentroid[j];
-	    	}
-	    }
-	    
-	    double invNclust = 1.0/nclust;
-		for (int j=0; j<ndesc; j++) {
-			externalCentroid[j] *= invNclust;
-		}
-	    
 		totalExternalVariance = 0;
 	    for (int i=0; i<nclust; i++) {
 	    	clusterCentroid = this.get(i).centroid;
@@ -190,6 +174,38 @@ public class Clusters extends Vector<Cluster> {
 	    return totalExternalVariance;
     
     }
+	
+	// calculate the External Centroid as the average of all points
+	public void calcExternalCentroid() throws Exception {
+
+		double[] clusterCentroid = this.firstElement().centroid;
+		double weight = this.firstElement().clusterPoints.size();
+		if (weight!=1.0) throw new Exception("intial cluster size should be 1.0");
+		int ndesc = clusterCentroid.length;
+	    if (ndesc==0) throw new Exception("externalCentroid length is equal to 0");
+		
+		externalCentroid = new double[ndesc];
+		
+		for (int j=0; j<ndesc; j++) {
+			externalCentroid[j] = weight*clusterCentroid[j];
+		}
+		
+		int nclust = this.size();
+	    for (int i=1; i<nclust; i++) {
+	    	clusterCentroid = this.get(i).centroid;
+	    	weight = this.get(i).clusterPoints.size();
+			if (weight!=1.0) throw new Exception("intial cluster size should be 1.0");
+	    	for (int j=0; j<ndesc; j++) {
+	    		externalCentroid[j] += weight*clusterCentroid[j];
+	    	}
+	    }
+	    
+	    double invNclust = 1.0/nclust;
+		for (int j=0; j<ndesc; j++) {
+			externalCentroid[j] *= invNclust;
+		}
+		
+	}
 	
 	private double distanceSq(double[] externalCentroid, double[] clusterCentroid) throws Exception {
 		
