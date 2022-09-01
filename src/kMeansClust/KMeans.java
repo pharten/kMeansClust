@@ -98,11 +98,12 @@ public class KMeans {
 		
 		int niter = clusters.size()-1;
 		//niter = 958;
-		for (int iter = 0; iter < niter; iter++) {
+		for (int iter = 0; iter <= niter; iter++) {
 			
 			double extVariance = clusters.CalcTotalExternalVariance();
 			double intVariance = clusters.CalcTotalClusterVariance();
-			//System.out.println("extVariance = "+extVariance+", intVariance = "+intVariance);
+			//System.out.println("iter = "+iter+" extVariance = "+extVariance+", intVariance = "+intVariance);
+			if (iter==niter) break;
 			if (intVariance>extVariance) break;
 			
 			double varmin = clusters.findMinVar();
