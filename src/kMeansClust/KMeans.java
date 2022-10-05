@@ -18,7 +18,9 @@ public class KMeans {
 	//static String csvFilename = "./data/LD50_training_set-2d.csv";
 	static String helpString = "User options:\njava -jar kMeans -h\njava -jar kMeans\njava -jar kMeans propFilename\n";
 
-	protected Vector<Cluster> clusters = new Vector<Cluster>();
+	protected Clusters clusters = null;
+	protected Clusters clusters_train = new Clusters();
+	protected Clusters clusters_test = new Clusters();
 
 	/* Create an object of type Logger so we can log error or warning messages. */
 	protected static Logger LOGGER = Logger.getLogger("kMeans", null);
@@ -91,6 +93,11 @@ public class KMeans {
 		Clusters clusters = new Clusters(csvFilename);
 		System.out.println("Number of cluster = "+clusters.size());
 		
+		randSplit(0.1, clusters);
+		System.out.println("Number of training clusters = "+clusters_train.size());
+		System.out.println("Number of testing clusters = "+clusters_test.size());
+		
+		clusters = clusters_train;
 		normalize(clusters);
 		
 		// wardsDistances is an nclusters x nclusters triangle showing (wards)distancesq between clusters
@@ -208,6 +215,25 @@ public class KMeans {
 	        	clusterCentroid[j] = descriptorValues[j];
 	        }
 		}
+		
+	}
+	
+	private void randSplit(double fracTests, Clusters clusters) throws Exception {
+		
+		/*
+		 * Randomly split clusters into training clusters and testing clusters
+		 * 
+		 */
+		
+		int nclust = clusters.size();
+		for (int i=0; i<nclust; i++) {
+			if (Math.random()<fracTests) {
+				clusters_test.add(clusters.get(i));
+			} else {
+				clusters_train.add(clusters.get(i));	
+			};
+		}
+		clusters.clear();
 		
 	}
 
