@@ -66,10 +66,11 @@ public class Clusters extends Vector<Cluster> {
 		  
 	    int ncent = this.size();
 	    
-	    varmin = Double.MAX_VALUE;
+	    //varmin = Double.MAX_VALUE;
 	    double var;
 	    k1min = 0;
-	    k2min = 0;
+	    k2min = 1;
+	    varmin = wardDist[k2min][k1min];
 	    
 	    for (int k2=1; k2<ncent; k2++) {
 	    	for (int k1=0; k1<k2; k1++) {
