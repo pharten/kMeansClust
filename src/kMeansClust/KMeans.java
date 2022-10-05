@@ -112,6 +112,7 @@ public class KMeans {
 			int nPoints1 = clusters.get(k1min).clusterPoints.size();
 			int nPoints2 = clusters.get(k2min).clusterPoints.size();
 			System.out.println("nclusters = "+clusters.size()+", varmin = "+varmin+", nPoints for cluster("+k1min+") = "+nPoints1+", cluster("+k2min+") = "+nPoints2);
+			if (nPoints1+nPoints2>clusters.size()) break;
 			//if ((varmin>(extVarianceBefore-extVariance)) && (iter>0) ) break;
 			//if the increase in internal variance becomes > the decrease in external variance then break.
 			//if (((intVariance-intVarianceBefore)>(extVarianceBefore-extVariance)) && (iter>0) ) break;
