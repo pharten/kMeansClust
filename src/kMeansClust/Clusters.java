@@ -161,7 +161,9 @@ public class Clusters extends Vector<Cluster> {
 	
 	public double CalcTotalExternalVariance() throws Exception {
 		
+		// externalCentroid remains the same
 		if (externalCentroid==null) calcExternalCentroid();
+		//calcExternalCentroid();
 		
 		double[] clusterCentroid;
 		
@@ -181,7 +183,7 @@ public class Clusters extends Vector<Cluster> {
 
 		double[] clusterCentroid = this.firstElement().centroid;
 		double weight = this.firstElement().clusterPoints.size();
-		if (weight!=1.0) throw new Exception("intial cluster size should be 1.0");
+		//if (weight!=1.0) throw new Exception("intial cluster size should be 1.0");
 		int ndesc = clusterCentroid.length;
 	    if (ndesc==0) throw new Exception("externalCentroid length is equal to 0");
 		
@@ -191,19 +193,21 @@ public class Clusters extends Vector<Cluster> {
 			externalCentroid[j] = weight*clusterCentroid[j];
 		}
 		
+		double totalWeight = weight;
 		int nclust = this.size();
 	    for (int i=1; i<nclust; i++) {
 	    	clusterCentroid = this.get(i).centroid;
 	    	weight = this.get(i).clusterPoints.size();
-			if (weight!=1.0) throw new Exception("intial cluster size should be 1.0");
+			//if (weight!=1.0) throw new Exception("intial cluster size should be 1.0");
 	    	for (int j=0; j<ndesc; j++) {
 	    		externalCentroid[j] += weight*clusterCentroid[j];
 	    	}
+	    	totalWeight += weight;
 	    }
 	    
-	    double invNclust = 1.0/nclust;
+	    double invTotalWeight = 1.0/totalWeight;
 		for (int j=0; j<ndesc; j++) {
-			externalCentroid[j] *= invNclust;
+			externalCentroid[j] *= invTotalWeight;
 		}
 		
 	}
