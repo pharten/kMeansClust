@@ -17,7 +17,7 @@ public class Clusters extends Vector<Cluster> {
 	public Clusters() throws Exception {
 		super();
 
-		throw new Error("Should not get here");
+		//throw new Error("Should not get here");
 
 	}
 	
@@ -161,7 +161,8 @@ public class Clusters extends Vector<Cluster> {
 	
 	public double CalcTotalExternalVariance() throws Exception {
 		
-		// externalCentroid remains the same
+		// externalCentroid remains the same for all level of hierarchy
+		// once all descriptors are normalized by avgDescValues, this should be a vector of 1.0s
 		if (externalCentroid==null) calcExternalCentroid();
 		//calcExternalCentroid();
 		
@@ -183,7 +184,8 @@ public class Clusters extends Vector<Cluster> {
 
 		double[] clusterCentroid = this.firstElement().centroid;
 		double weight = this.firstElement().clusterPoints.size();
-		//if (weight!=1.0) throw new Exception("intial cluster size should be 1.0");
+		if (weight!=1.0) throw new Exception("initial cluster weight should be 1.0");
+		
 		int ndesc = clusterCentroid.length;
 	    if (ndesc==0) throw new Exception("externalCentroid length is equal to 0");
 		

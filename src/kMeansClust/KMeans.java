@@ -21,6 +21,7 @@ public class KMeans {
 	protected Clusters clusters = null;
 	protected Clusters clusters_train = new Clusters();
 	protected Clusters clusters_test = new Clusters();
+	protected double[] avgDescValues = null;
 
 	/* Create an object of type Logger so we can log error or warning messages. */
 	protected static Logger LOGGER = Logger.getLogger("kMeans", null);
@@ -98,7 +99,7 @@ public class KMeans {
 		System.out.println("Number of testing clusters = "+clusters_test.size());
 		
 		clusters = clusters_train;
-		normalize(clusters);
+		avgDescValues = normalize(clusters);
 		
 		// wardsDistances is an nclusters x nclusters triangle showing (wards)distancesq between clusters
 		clusters.calcWardsDistances();
@@ -162,7 +163,7 @@ public class KMeans {
 
 	}
 
-	private void normalize(Clusters clusters) throws Exception {
+	private double[] normalize(Clusters clusters) throws Exception {
 		
 		/*
 		 * Normalize descriptors while there is still one point in each cluster
@@ -215,6 +216,8 @@ public class KMeans {
 	        	clusterCentroid[j] = descriptorValues[j];
 	        }
 		}
+		
+		return centroid;
 		
 	}
 	
