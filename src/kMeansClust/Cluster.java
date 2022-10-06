@@ -10,6 +10,8 @@ public class Cluster {
 	protected double clusterVariance;
 	protected double predictionAvg;
 	protected double predictionUncertainty;
+	protected double predictedValue;
+	protected double predictedUncertainty;
 	
 	public Cluster(Point point) throws Exception {
 		super();
@@ -137,6 +139,88 @@ public class Cluster {
 	    return distsq;
     
     }
+	
+	public void normalize(double[] avgDescValues) throws Exception {
+
+		int nPoints = clusterPoints.size();
+	    if (nPoints!=1) throw new Error("For test clusters nPoints is equal to 1");
+	    
+		if (clusterPoints.firstElement().descriptorValues.length != avgDescValues.length) {
+			throw new Error("The length of descriptors should equal the length of average descriptor values.");
+		}
+	    
+		for (Point point: clusterPoints) {
+			double[] descriptorValues = point.descriptorValues;
+			int nDesc = descriptorValues.length;
+			for (int i=0; i<nDesc; i++) {
+				if (avgDescValues[i] != 0.0 ) {
+					descriptorValues[i] /= avgDescValues[i];
+					centroid[i] = descriptorValues[i]; 
+				} else {
+					//throw new Error("The average descriptor value = 0.0");
+				}
+			}
+		}
+		
+	}
+	
+	public Cluster findClosest(Clusters clusters) throws Exception {
+
+		double minWardsDistance = Double.MAX_VALUE;
+		Cluster closestCluster = null;
+		
+		for (Cluster cluster: clusters) {
+			double wardsDistance = this.wardsDistance(cluster);
+			if (wardsDistance < minWardsDistance) {
+				closestCluster = cluster;
+				minWardsDistance = wardsDistance;
+			}
+		}
+		if (closestCluster==null) throw new Error("For some reason closestCluster is null");
+		
+		return closestCluster;
+		
+	}
+	
+	public double wardsDistance(Cluster cluster) throws Exception {
+		
+		double thisWght = this.getClusterPoints().size();
+		double remoteWght = cluster.getClusterPoints().size();
+		
+	    double wardsDistance = ((thisWght*remoteWght)/(thisWght+remoteWght))*distanceSq(cluster);
+	    
+	    return wardsDistance;
+	    
+	}
+	
+	private double distanceSq(Cluster cluster) throws Exception {
+		
+	    if (centroid==null) throw new Error("This centroid is null");
+	    if (centroid.length==0) throw new Error("For some reason, this centroid length = 0");
+		
+		double[] remoteCentroid = cluster.getCentroid();
+		
+	    if (remoteCentroid==null) throw new Error("Remote centroid is null");
+	    if (remoteCentroid.length==0) throw new Error("For some reason, centroid length = 0");
+	    if (remoteCentroid.length!=centroid.length) throw new Error("For some reason, centroid and remote centroid are not the same length");
+		
+	    int ndesc = centroid.length;
+	    
+	    double diff;
+	    double distsq = 0.0;
+	    for (int i=0; i<ndesc; i++) {
+	        diff = remoteCentroid[i]-centroid[i];
+	        distsq += diff*diff;
+	    }
+	    
+	    return distsq;
+    
+    }
+	
+	public void predictAverageAndUncertainty(Cluster closestCluster) {
+			predictedValue = closestCluster.predictionAvg;
+			predictedUncertainty = closestCluster.predictedUncertainty;
+	}
 	
 	public double getClusterVariance() {
 		return clusterVariance;

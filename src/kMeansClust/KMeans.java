@@ -121,6 +121,7 @@ public class KMeans {
 			int nPoints2 = clusters.get(k2min).clusterPoints.size();
 			System.out.println("nclusters = "+clusters.size()+", varmin = "+varmin+", nPoints for cluster("+k1min+") = "+nPoints1+", cluster("+k2min+") = "+nPoints2);
 			if (nPoints1+nPoints2>clusters.size()) break;
+			//if (nPoints1+nPoints2>50) break;
 			//if ((varmin>(extVarianceBefore-extVariance)) && (iter>0) ) break;
 			//if the increase in internal variance becomes > the decrease in external variance then break.
 			//if (((intVariance-intVarianceBefore)>(extVarianceBefore-extVariance)) && (iter>0) ) break;
@@ -146,6 +147,43 @@ public class KMeans {
 			int nPoints = cluster.clusterPoints.size();
 			System.out.println(i+") nPoints = "+nPoints+", "+cluster.avgPrediction+", "+cluster.predictionAvg+" +/- "+cluster.predictionUncertainty);
 		}
+		
+		// First normalize all descriptors in test clusters
+		clusters_test.normalize(avgDescValues);
+		
+		// Calculate the average target value in test set
+		double avgTest = 0.0;
+		int nPredict = clusters_test.size();
+		for (int i=0; i<nPredict; i++) {
+			Cluster testCluster = clusters_test.get(i);
+			if (testCluster.getClusterPoints().size()!=1) throw new Error("testCluster size should be 1");
+			avgTest+=testCluster.avgPrediction;
+		}
+		avgTest/=nPredict;
+		
+		double diff;
+		
+		// Find training cluster closest to test cluster and use it to predict target value
+		double avgTestDiffSq = 0.0;
+		double avgPredDiffSq = 0.0;
+		for (int i=0; i<nPredict; i++) {
+			Cluster testCluster = clusters_test.get(i);
+			Cluster closestCluster = testCluster.findClosest(clusters);
+			//testCluster.predictAverageAndUncertainty(closestCluster);
+			int nPoints = closestCluster.clusterPoints.size();
+			double test = testCluster.avgPrediction;
+			double pred = closestCluster.predictionAvg;
+			System.out.println(i+") nPoints = "+nPoints+", test = "+test+", prediction = "+pred+" +/- "+closestCluster.predictionUncertainty);
+			diff = test-pred;
+			avgPredDiffSq += diff*diff;
+			diff = test-avgTest;
+			avgTestDiffSq += diff*diff;
+		}
+		avgPredDiffSq/=nPredict;
+		avgTestDiffSq/=nPredict;
+		
+		double Rsq = 1.0 - (avgPredDiffSq/avgTestDiffSq);
+		System.out.println(" Rsq = "+Rsq);
 
 	}
 

@@ -99,7 +99,7 @@ public class Clusters extends Vector<Cluster> {
 	    
 	    for (int k2=1; k2<ncent; k2++) {
 	    	for (int k1=0; k1<k2; k1++) {
-		        wardDist[k2][k1] = (wght[k1]*wght[k2])/(wght[k1]+wght[k2])*distanceSq(k1, k2);
+		        wardDist[k2][k1] = ((wght[k1]*wght[k2])/(wght[k1]+wght[k2]))*distanceSq(k1, k2);
 	    	}
 		}
 	    
@@ -112,10 +112,10 @@ public class Clusters extends Vector<Cluster> {
 	    wght[k1new] = this.get(k1new).getClusterPoints().size();
 	    
     	for (int k1=0; k1<k1new; k1++) {
-	        wardDist[k1new][k1] = (wght[k1]*wght[k1new])/(wght[k1]+wght[k1new])*distanceSq(k1, k1new);
+	        wardDist[k1new][k1] = ((wght[k1]*wght[k1new])/(wght[k1]+wght[k1new]))*distanceSq(k1, k1new);
     	}
     	for (int k1=k1new+1; k1<ncent; k1++) {
-	        wardDist[k1][k1new] = (wght[k1new]*wght[k1])/(wght[k1new]+wght[k1])*distanceSq(k1new, k1);
+	        wardDist[k1][k1new] = ((wght[k1new]*wght[k1])/(wght[k1new]+wght[k1]))*distanceSq(k1new, k1);
     	}
 	    
 	}
@@ -249,6 +249,14 @@ public class Clusters extends Vector<Cluster> {
     
     }
 	
+	public void normalize(double[] avgDescValues) throws Exception {
+
+		for (Cluster cluster: this) {
+			cluster.normalize(avgDescValues);
+		}
+		
+	}
+	
 	public int getK1min() {
 		return k1min;
 	}
@@ -268,5 +276,5 @@ public class Clusters extends Vector<Cluster> {
 	public double getTotalClusterVariance() {
 		return totalClusterVariance;
 	}
-	
+
 }
