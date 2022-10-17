@@ -1,6 +1,7 @@
 package kMeansClust;
 
 import java.io.IOException;
+import java.util.Random;
 import java.util.Vector;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -268,9 +269,10 @@ public class KMeans {
 		 * 
 		 */
 		
+		Random r = new Random(0);
 		int nclust = clusters.size();
 		for (int i=0; i<nclust; i++) {
-			if (Math.random()<fracTests) {
+			if (r.nextDouble()<fracTests) {
 				clusters_test.add(clusters.get(i));
 			} else {
 				clusters_train.add(clusters.get(i));	
