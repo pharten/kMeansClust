@@ -126,16 +126,18 @@ public class KMeans {
 			//if the increase in internal variance becomes > the decrease in external variance then break.
 			//if (((intVariance-intVarianceBefore)>(extVarianceBefore-extVariance)) && (iter>0) ) break;
 			Cluster clustersJoined = new Cluster(clusters.get(k1min),clusters.get(k2min));
-			clusters.set(k1min, clustersJoined);
 
 			if (k2min==clusters.size()-1) {
-				clusters.remove(clusters.size()-1);
+				clusters.set(k1min, clustersJoined);
+				clusters.remove(clusters.size()-1);  // remove last element
+				clusters.reCalcWardsDistances(k1min);  // recalculate distances
 			} else {
+				clusters.set(k1min, clustersJoined);
 				clusters.set(k2min, clusters.lastElement());
-				clusters.remove(clusters.size()-1);
-				clusters.reCalcWardsDistances(k2min);
+				clusters.remove(clusters.size()-1); // remove last element
+				clusters.reCalcWardsDistances(k1min);  // recalculate distances
+				clusters.reCalcWardsDistances(k2min);  // recalculate distances
 			}
-			clusters.reCalcWardsDistances(k1min);
 
 			//System.out.println("Number of clusters = "+clusters.size());
 		}
