@@ -1,5 +1,6 @@
 package kMeansClust;
 
+import java.util.Random;
 import java.util.Vector;
 
 public class Cluster {
@@ -92,6 +93,7 @@ public class Cluster {
 		  
 	    if (clusterPoints==null || clusterPoints.size()==0) throw new Error("There are no points in this cluster");
 	    
+	    Random r = new Random(0);
 	    int nPoints = clusterPoints.size();
 	    int nSamp = 16;
 	    double sampPred;
@@ -101,7 +103,7 @@ public class Cluster {
 	    for (int k1=0; k1<nPoints; k1++) {
 	    	sampPred=0.0;
 	    	for (int i=0; i<nSamp; i++) {
-	    		sampPred += clusterPoints.get((int)(Math.random()*nPoints)).prediction;
+	    		sampPred += clusterPoints.get((int)(r.nextDouble()*nPoints)).prediction;
 	    	}
 	    	prediction = sampPred / nSamp;
 	    	//prediction = clusterPoints.get(k1).prediction;
