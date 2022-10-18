@@ -175,7 +175,7 @@ public class KMeans {
 			//testCluster.predictAverageAndUncertainty(closestCluster);
 			int nPoints = closestCluster.clusterPoints.size();
 			double test = testCluster.avgPrediction;
-			double pred = closestCluster.predictionAvg;
+			double pred = closestCluster.avgPrediction;
 			System.out.println(i+") nPoints = "+nPoints+", test = "+test+", prediction = "+pred+" +/- "+closestCluster.predictionUncertainty);
 			diff = test-pred;
 			avgPredDiffSq += diff*diff;
