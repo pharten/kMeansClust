@@ -257,6 +257,42 @@ public class Clusters extends Vector<Cluster> {
 		
 	}
 	
+	double calculateR2(Clusters clusters) throws Error, Exception {
+		
+		// Calculate the average target value in test set
+		double avgTest = 0.0;
+		int nPredict = this.size();
+		for (int i=0; i<nPredict; i++) {
+			Cluster testCluster = this.get(i);
+			if (testCluster.getClusterPoints().size()!=1) throw new Error("testCluster size should be 1");
+			avgTest+=testCluster.avgPrediction;
+		}
+		avgTest/=nPredict;
+		
+		double diff;
+		// Find training cluster closest to test cluster and use it to predict target value
+		double avgTestDiffSq = 0.0;
+		double avgPredDiffSq = 0.0;
+		for (int i=0; i<nPredict; i++) {
+			Cluster testCluster = this.get(i);
+			Cluster closestCluster = testCluster.findClosest(clusters);
+			//testCluster.predictAverageAndUncertainty(closestCluster);
+			int nPoints = closestCluster.clusterPoints.size();
+			double test = testCluster.avgPrediction;
+			double pred = closestCluster.avgPrediction;
+			//System.out.println(i+") nPoints = "+nPoints+", test = "+test+", prediction = "+pred+" +/- "+closestCluster.predictionUncertainty);
+			diff = test-pred;
+			avgPredDiffSq += diff*diff;
+			diff = test-avgTest;
+			avgTestDiffSq += diff*diff;
+		}
+		avgPredDiffSq/=nPredict;
+		avgTestDiffSq/=nPredict;
+		
+		double Rsq = 1.0 - (avgPredDiffSq/avgTestDiffSq);
+		return Rsq;
+	}
+	
 	public int getK1min() {
 		return k1min;
 	}

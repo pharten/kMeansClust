@@ -99,7 +99,9 @@ public class KMeans {
 		System.out.println("Number of training clusters = "+clusters_train.size());
 		System.out.println("Number of testing clusters = "+clusters_test.size());
 		
-		clusters = clusters_train;
+		clusters.clear();
+		clusters = (Clusters) ObjectCloner.deepCopy(clusters_train);
+		
 		avgDescValues = normalize(clusters);
 		
 		// wardsDistances is an nclusters x nclusters triangle showing (wards)distancesq between clusters
@@ -151,41 +153,18 @@ public class KMeans {
 			System.out.println(i+") nPoints = "+nPoints+", "+cluster.avgPrediction+", "+cluster.predictionAvg+" +/- "+cluster.predictionUncertainty);
 		}
 		
+		// First normalize all descriptors in original training clusters by avgDescValues
+		clusters_train.normalize(avgDescValues);
+		
+		// Calculate R2 for training clusters predictions
+		double Rsq = clusters_train.calculateR2(clusters);
+		System.out.println(" Rsq = "+Rsq);
+		
 		// First normalize all descriptors in test clusters by avgDescValues
 		clusters_test.normalize(avgDescValues);
 		
-		// Calculate the average target value in test set
-		double avgTest = 0.0;
-		int nPredict = clusters_test.size();
-		for (int i=0; i<nPredict; i++) {
-			Cluster testCluster = clusters_test.get(i);
-			if (testCluster.getClusterPoints().size()!=1) throw new Error("testCluster size should be 1");
-			avgTest+=testCluster.avgPrediction;
-		}
-		avgTest/=nPredict;
-		
-		double diff;
-		
-		// Find training cluster closest to test cluster and use it to predict target value
-		double avgTestDiffSq = 0.0;
-		double avgPredDiffSq = 0.0;
-		for (int i=0; i<nPredict; i++) {
-			Cluster testCluster = clusters_test.get(i);
-			Cluster closestCluster = testCluster.findClosest(clusters);
-			//testCluster.predictAverageAndUncertainty(closestCluster);
-			int nPoints = closestCluster.clusterPoints.size();
-			double test = testCluster.avgPrediction;
-			double pred = closestCluster.avgPrediction;
-			System.out.println(i+") nPoints = "+nPoints+", test = "+test+", prediction = "+pred+" +/- "+closestCluster.predictionUncertainty);
-			diff = test-pred;
-			avgPredDiffSq += diff*diff;
-			diff = test-avgTest;
-			avgTestDiffSq += diff*diff;
-		}
-		avgPredDiffSq/=nPredict;
-		avgTestDiffSq/=nPredict;
-		
-		double Rsq = 1.0 - (avgPredDiffSq/avgTestDiffSq);
+		// Calculate R2 for test clusters predictions
+		Rsq = clusters_test.calculateR2(clusters);
 		System.out.println(" Rsq = "+Rsq);
 
 	}
@@ -275,7 +254,6 @@ public class KMeans {
 				clusters_train.add(clusters.get(i));	
 			};
 		}
-		clusters.clear();
 		
 	}
 
