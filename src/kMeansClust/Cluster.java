@@ -1,9 +1,10 @@
 package kMeansClust;
 
+import java.io.Serializable;
 import java.util.Random;
 import java.util.Vector;
 
-public class Cluster {
+public class Cluster extends Object implements Serializable, Cloneable {
 	
 	protected double[] centroid = null;
 	protected double avgPrediction;
@@ -159,7 +160,7 @@ public class Cluster {
 					descriptorValues[i] /= avgDescValues[i];
 					centroid[i] = descriptorValues[i]; 
 				} else {
-					//throw new Error("The average descriptor value = 0.0");
+					throw new Error("The average descriptor value = 0.0");
 				}
 			}
 		}
