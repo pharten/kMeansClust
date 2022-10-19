@@ -151,7 +151,7 @@ public class KMeans {
 			System.out.println(i+") nPoints = "+nPoints+", "+cluster.avgPrediction+", "+cluster.predictionAvg+" +/- "+cluster.predictionUncertainty);
 		}
 		
-		// First normalize all descriptors in test clusters
+		// First normalize all descriptors in test clusters by avgDescValues
 		clusters_test.normalize(avgDescValues);
 		
 		// Calculate the average target value in test set
@@ -216,9 +216,9 @@ public class KMeans {
 		double[] descriptorValues = point.descriptorValues;
 		int ndesc = point.descriptorValues.length;
 		
-		double[] centroid = new double[ndesc];
+		double[] avgDescValues = new double[ndesc];
 		for (int j=0; j<ndesc; j++) {
-			centroid[j] = 0.0;
+			avgDescValues[j] = 0.0;
 		}
 		
 		int nclust = clusters.size();
@@ -229,13 +229,13 @@ public class KMeans {
 			point = points.firstElement();
 			descriptorValues = point.descriptorValues;
 			for (int j=0; j<ndesc; j++) {
-				centroid[j] += descriptorValues[j];	
+				avgDescValues[j] += descriptorValues[j];	
 			}
 		}
 		
 		// get average values of descriptors
 		for (int j=0; j<ndesc; j++) {
-			centroid[j] /= nclust;
+			avgDescValues[j] /= nclust;
 		}
 		
 		// normalize all descriptor values by average values
@@ -246,11 +246,8 @@ public class KMeans {
 			point = points.firstElement();
 			descriptorValues = point.descriptorValues;
 			for (int j=0; j<ndesc; j++) {
-				if (centroid[j]!=0.0) {
-					descriptorValues[j] /= centroid[j];
-//				} else {
-//					throw new Exception("centroid["+j+"] = 0.0");
-				}
+				if (avgDescValues[j] < Float.MIN_VALUE) avgDescValues[j] = Float.MIN_VALUE;
+				descriptorValues[j] /= avgDescValues[j];
 			}
 			double[] clusterCentroid = cluster.getCentroid();
 	        for (int j=0; j<ndesc; j++) {
@@ -258,7 +255,7 @@ public class KMeans {
 	        }
 		}
 		
-		return centroid;
+		return avgDescValues;
 		
 	}
 	
