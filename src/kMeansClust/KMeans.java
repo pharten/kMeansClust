@@ -158,14 +158,14 @@ public class KMeans {
 		
 		// Calculate R2 for training clusters predictions
 		double Rsq = clusters_train.calculateR2(clusters);
-		System.out.println(" Rsq = "+Rsq);
+		System.out.println(" Training Rsq = "+Rsq);
 		
 		// First normalize all descriptors in test clusters by avgDescValues
 		clusters_test.normalize(avgDescValues);
 		
 		// Calculate R2 for test clusters predictions
 		Rsq = clusters_test.calculateR2(clusters);
-		System.out.println(" Rsq = "+Rsq);
+		System.out.println(" Testing Rsq = "+Rsq);
 
 	}
 
