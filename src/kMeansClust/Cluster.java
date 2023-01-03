@@ -116,7 +116,7 @@ public class Cluster extends Object implements Serializable, Cloneable {
 	    
 	    double stdsq = predictionSqAvg - predictionAvg*predictionAvg;
 	    
-	    predictionUncertainty = Math.sqrt(stdsq/nPoints);
+	    predictionUncertainty = Math.sqrt(stdsq);
 	    //predictionUncertainty = Math.sqrt(stdsq);
     
     }
