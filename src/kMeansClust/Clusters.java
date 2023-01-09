@@ -8,12 +8,16 @@ import com.opencsv.CSVReader;
 public class Clusters extends Vector<Cluster> {
 	
 	int k1min, k2min;
-	double distmin, totalExternalDist, totalInternalDist;
+	double varmin, totalExternalVariance, totalClusterVariance;
+	double[] externalCentroid = null;
+	
+	double[] wght = null;
+	double[][] wardDist = null;
 
 	public Clusters() throws Exception {
 		super();
 
-		throw new Error("Should not get here");
+		//throw new Error("Should not get here");
 
 	}
 	
@@ -34,6 +38,14 @@ public class Clusters extends Vector<Cluster> {
 			/* Loop over lines in the csv file */
 			while ((line = csvReader.readNext()) != null) {
 				/* Initially each cluster is a single point */
+				String sub = filename.substring(0,11);
+				if (sub.equals("./data/LD50")) {
+					int len = line.length;
+					String[] line2 = new String[len-2];
+					for (int i=0; i<len-3; i++) line2[i]=line[i+2];
+					line2[len-3]=line[1];
+					line = line2;
+				}
 				this.add(new Cluster(new Point(line)));
 			}
 
@@ -50,33 +62,65 @@ public class Clusters extends Vector<Cluster> {
 		return;
 	}
 	
-	public double findMinDist() throws Exception {
+	public double findMinVar() throws Exception {
 		  
 	    int ncent = this.size();
-	    double dist = 0;
 	    
-	    totalExternalDist = 0;
-	    distmin = Double.MAX_VALUE;
+	    //varmin = Double.MAX_VALUE;
+	    double var;
 	    k1min = 0;
-	    k2min = 0;
+	    k2min = 1;
+	    varmin = wardDist[k2min][k1min];
 	    
-	    for (int k1=0; k1<ncent-1; k1++) {
-	      for (int k2=k1+1; k2<ncent; k2++) {
-	        dist = distance(k1, k2);
-	        if (dist < distmin) {
-	          distmin = dist;
-	          k1min = k1;
-	          k2min = k2;
-//	          System.out.println("distmin = "+distmin+", k1min = "+k1min+", k2min = "+k2min);
-	        }
-	        totalExternalDist += dist;
-	      }
-	    }
+	    for (int k2=1; k2<ncent; k2++) {
+	    	for (int k1=0; k1<k2; k1++) {
+	    		var = wardDist[k2][k1];
+		        if (var < varmin) {
+			          varmin = var;
+			          k1min = k1;
+			          k2min = k2;
+			    }
+	    	}
+		}
 	    
-	    return distmin;
+	    return varmin;
 	}
 	
-	private double distance(int k1, int k2) throws Exception {
+	public void calcWardsDistances() throws Exception {
+		  
+	    int ncent = this.size();
+	     
+	    wardDist = new double[ncent][ncent];
+	    wght = new double[ncent];
+	    
+	    for (int k1=0; k1<ncent; k1++) {
+	    	wght[k1] = this.get(k1).getClusterPoints().size();
+		}
+	    
+	    for (int k2=1; k2<ncent; k2++) {
+	    	for (int k1=0; k1<k2; k1++) {
+		        wardDist[k2][k1] = ((wght[k1]*wght[k2])/(wght[k1]+wght[k2]))*distanceSq(k1, k2);
+	    	}
+		}
+	    
+	}
+	
+	public void reCalcWardsDistances(int k1new) throws Exception {
+		  
+	    int ncent = this.size();
+	    
+	    wght[k1new] = this.get(k1new).getClusterPoints().size();
+	    
+    	for (int k1=0; k1<k1new; k1++) {
+	        wardDist[k1new][k1] = ((wght[k1]*wght[k1new])/(wght[k1]+wght[k1new]))*distanceSq(k1, k1new);
+    	}
+    	for (int k1=k1new+1; k1<ncent; k1++) {
+	        wardDist[k1][k1new] = ((wght[k1new]*wght[k1])/(wght[k1new]+wght[k1]))*distanceSq(k1new, k1);
+    	}
+	    
+	}
+	
+	private double distanceSq(int k1, int k2) throws Exception {
 		  
 	    int ncent = this.size();
 	    if (ncent==0) throw new Error("The number of cluster is equal to 0");
@@ -102,43 +146,153 @@ public class Clusters extends Vector<Cluster> {
 	    
 	    if (ndesc1!=ndesc2) throw new Error("centroids are not of equal length");
 	    
+	    if (k1==k2) return 0.0;
+	    
 	    double diff;
-	    double dist = 0.0;
+	    double distsq = 0.0;
 	    for (int i=0; i<ndesc1; i++) {
 	        diff = centroid1[i]-centroid2[i];
-	        dist += diff*diff;
+	        distsq += diff*diff;
 	    }
-	    dist = Math.sqrt(dist);
 	    
-	    return dist;
+	    return distsq;
     
     }
 	
-	public double CalcTotalInternalDist() throws Exception {
-		  
+	public double CalcTotalExternalVariance() throws Exception {
+		
+		// externalCentroid remains the same for all level of hierarchy
+		// once all descriptors are normalized by avgDescValues, this should be a vector of 1.0s
+		if (externalCentroid==null) calcExternalCentroid();
+		//calcExternalCentroid();
+		
+		double[] clusterCentroid;
+		
 		int nclust = this.size();
-	
-		totalInternalDist = 0;
+		totalExternalVariance = 0;
 	    for (int i=0; i<nclust; i++) {
-	        totalInternalDist += this.get(i).getTotalInternalDist();
+	    	clusterCentroid = this.get(i).centroid;
+	        totalExternalVariance += distanceSq(externalCentroid, clusterCentroid);
 	    }
 	    
-	    return totalInternalDist;
+	    return totalExternalVariance;
     
     }
 	
-	public void CalcPredictionAvgAndUncertainty() throws Exception {
-		  
-		int nclust = this.size();
-	
-	    for (int i=0; i<nclust; i++) {
-	        this.get(i).CalcPredictionAvergeAndUncertainy();
-	    }
-	    
-	    return;
-    
-    }
+	// calculate the External Centroid as the average of all points
+	public void calcExternalCentroid() throws Exception {
 
+		double[] clusterCentroid = this.firstElement().centroid;
+		double weight = this.firstElement().clusterPoints.size();
+		if (weight!=1.0) throw new Exception("initial cluster weight should be 1.0");
+		
+		int ndesc = clusterCentroid.length;
+	    if (ndesc==0) throw new Exception("externalCentroid length is equal to 0");
+		
+		externalCentroid = new double[ndesc];
+		
+		for (int j=0; j<ndesc; j++) {
+			externalCentroid[j] = weight*clusterCentroid[j];
+		}
+		
+		double totalWeight = weight;
+		int nclust = this.size();
+	    for (int i=1; i<nclust; i++) {
+	    	clusterCentroid = this.get(i).centroid;
+	    	weight = this.get(i).clusterPoints.size();
+			//if (weight!=1.0) throw new Exception("intial cluster size should be 1.0");
+	    	for (int j=0; j<ndesc; j++) {
+	    		externalCentroid[j] += weight*clusterCentroid[j];
+	    	}
+	    	totalWeight += weight;
+	    }
+	    
+	    double invTotalWeight = 1.0/totalWeight;
+		for (int j=0; j<ndesc; j++) {
+			externalCentroid[j] *= invTotalWeight;
+		}
+		
+	}
+	
+	private double distanceSq(double[] externalCentroid, double[] clusterCentroid) throws Exception {
+		
+	    if (externalCentroid==null) throw new Exception("externalCentroid is null");
+	    
+	    if (clusterCentroid==null) throw new Exception("clusterCentroid is null");
+	    
+	    int ndesc = externalCentroid.length;
+	    if (ndesc==0) throw new Exception("externalCentroid length is equal to 0");
+	    
+	    if (ndesc!=clusterCentroid.length) throw new Exception("Centroids are not of equal lengths");
+	    
+	    double diff;
+	    double distsq = 0.0;
+	    for (int i=0; i<ndesc; i++) {
+	        diff = externalCentroid[i]-clusterCentroid[i];
+	        distsq += diff*diff;
+	    }
+	    
+	    return distsq;
+    
+    }
+	
+	public double CalcTotalClusterVariance() throws Exception {
+		  
+		int nclust = this.size();
+	
+		totalClusterVariance = 0;
+	    for (int i=0; i<nclust; i++) {
+	        totalClusterVariance += this.get(i).getClusterVariance();
+	    }
+	    
+	    return totalClusterVariance;
+    
+    }
+	
+	public void normalize(double[] avgDescValues) throws Exception {
+
+		for (Cluster cluster: this) {
+			cluster.normalize(avgDescValues);
+		}
+		
+	}
+	
+	double calculateR2(Clusters clusters) throws Error, Exception {
+		
+		// Calculate the average target value in test set
+		double avgTest = 0.0;
+		int nPredict = this.size();
+		for (int i=0; i<nPredict; i++) {
+			Cluster testCluster = this.get(i);
+			if (testCluster.getClusterPoints().size()!=1) throw new Error("testCluster size should be 1");
+			avgTest+=testCluster.avgPrediction;
+		}
+		avgTest/=nPredict;
+		
+		double diff;
+		// Find training cluster closest to test cluster and use it to predict target value
+		double avgTestDiffSq = 0.0;
+		double avgPredDiffSq = 0.0;
+		for (int i=0; i<nPredict; i++) {
+			Cluster testCluster = this.get(i);
+			Cluster closestCluster = testCluster.findClosest(clusters);
+			//testCluster.predictAverageAndUncertainty(closestCluster);
+			int nPoints = closestCluster.clusterPoints.size();
+			double test = testCluster.avgPrediction;
+			double pred = closestCluster.avgPrediction;
+			//System.out.println(i+") nPoints = "+nPoints+", test = "+test+", prediction = "+pred+" +/- "+closestCluster.predictionUncertainty);
+			diff = test-pred;
+			avgPredDiffSq += diff*diff;
+			diff = test-avgTest;
+			avgTestDiffSq += diff*diff;
+		}
+		avgPredDiffSq/=nPredict;
+		avgTestDiffSq/=nPredict;
+		
+		double Rsq = 1.0 - (avgPredDiffSq/avgTestDiffSq);
+		return Rsq;
+	}
+	
 	public int getK1min() {
 		return k1min;
 	}
@@ -147,16 +301,16 @@ public class Clusters extends Vector<Cluster> {
 		return k2min;
 	}
 
-	public double getDistmin() {
-		return distmin;
+	public double getVarmin() {
+		return varmin;
 	}
 
-	public double getTotalExternalDist() {
-		return totalExternalDist;
+	public double getTotalExternalVariance() {
+		return totalExternalVariance;
 	}
 
-	public double getTotalInternalDistances() {
-		return totalInternalDist;
+	public double getTotalClusterVariance() {
+		return totalClusterVariance;
 	}
-	
+
 }
